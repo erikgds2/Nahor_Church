@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sistema de Distribuição de Hinários e Bíblias</title>
+  <style>
+    :root {
+      --primary: #1a3a5c;
+      --secondary: #436b94;
+      --bg: linear-gradient(180deg, #e9f0fb 0%, #f8fbff 100%);
+      --surface: #ffffff;
+      --text: #1f2937;
+      --muted: #63718c;
+      --danger: #c0392b;
+      --success: #27ae60;
+      --warning: #d68910;
+      --radius: 16px;
+      --shadow: 0 12px 25px rgba(26, 58, 92, 0.14);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: 'Inter', 'Segoe UI', Roboto, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+    header {
+      background: rgba(255,255,255,.96);
+      border-bottom: 1px solid #d5e1ee;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(6px);
+    }
+    .nav {
+      display: flex;
+      overflow-x: auto;
+      gap: 8px;
+      padding: 10px 10px 6px;
+      max-width: 1200px;
+      margin: 0 auto;
+      scrollbar-width: none;
+    }
+    .nav::-webkit-scrollbar { display: none; }
+    .nav button {
+      border: 1px solid rgba(26,58,92,.12);
+      background: #fff;
+      color: var(--primary);
+      padding: 8px 12px;
+      border-radius: 999px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all .2s ease;
+      min-width: 100px;
+      white-space: nowrap;
+    }
+    .nav button.active,
+    .nav button:hover {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #fff;
+      transform: translateY(-1px);
+      box-shadow: 0 6px 14px rgba(26,58,92,0.15);
+    }
+    .container {
+      max-width: 1180px;
+      margin: 14px auto;
+      padding: 0 10px 60px;
+    }
+    .panel {
+      background: var(--surface);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 16px;
+      margin-bottom: 14px;
+      border: 1px solid #e5ebf4;
+    }
+    .hidden { display: none; }
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
+    .card {
+      border-radius: var(--radius);
+      padding: 16px;
+      background: linear-gradient(180deg, #ffffff 0%, #f2f6fb 100%);
+      box-shadow: 0 8px 18px rgba(41,66,91,0.12);
+      border: 1px solid #e0e8f4;
+      transition: transform .2s ease, box-shadow .2s ease;
+    }
+    .card:hover { transform: translateY(-4px); box-shadow: 0 12px 30px rgba(41,66,91,0.2); }
+    .card h3 {
+      margin: 0 0 10px;
+      color: var(--primary);
+      font-size: 1.12rem;
+    }
+    .card p {
+      margin: 6px 0;
+      font-size: .95rem;
+      color: var(--muted);
+    }
+    .card p strong { color: #1d3254; }
+    .mini { font-size: .84rem; color: var(--muted); }
+    .form-row { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 12px; }
+    label { display: block; margin: 8px 0 4px; font-weight: 600; color: #2a4265; }
+    input, select { width: 100%; padding: 10px; border-radius: 12px; border: 1px solid #cad6e8; background: #fdfdff; font-size: .95rem; }
+    select:focus, input:focus { outline: 2px solid rgba(26,58,92,.2); border-color: #97abe4; }
+    button.main { margin-top: 12px; border: none; background: var(--primary); color: #fff; border-radius: 12px; padding: 11px 16px; font-weight: 700; cursor: pointer; width: 100%; box-shadow: 0 6px 8px rgba(26,58,92,0.16); transition: background .15s ease; }
+    button.main:hover { background: var(--secondary); }
+    button.small { border: 1px solid #ccd6e3; background: #fff; color: #2e4b70; border-radius: 10px; padding: 7px 11px; cursor: pointer; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; border-radius: 10px; overflow: hidden; }
+    th, td { border: 1px solid #e7edf6; padding: 9px; text-align: left; font-size: .88rem; }
+    th { background: #f8faff; color: #1f3766; font-weight: 700; }
+    tr:nth-child(even) { background: #f9fbff; }
+    .message { padding: 10px 12px; border-radius: 10px; margin-bottom: 12px; font-size: .95rem; }
+    .success { background: #e6f8ef; border: 1px solid #b4dfcd; color: #117a4d; }
+    .error { background: #fef0f0; border: 1px solid #f2b3b1; color: #a62922; }
+    .badge { display: inline-block; padding: 4px 8px; border-radius: 999px; font-size: .76rem; color: #fff; text-transform: uppercase; }
+    .badge-pendente { background: #f39c12; }
+    .badge-aprovado { background: #27ae60; }
+    .badge-recusado { background: #c0392b; }
+    .footer { margin-top: 20px; padding: 14px 0 20px; text-align: center; font-size: .86rem; color: #5d6977; }
+    .footer button { margin-top: 8px; background: #fff; color: #4a5f7e; border:1px solid #d1dbe8; border-radius: 10px; padding: 7px 12px; cursor: pointer; }
+    @media (max-width: 900px) {
+      .grid-3 { grid-template-columns: 1fr; }
+      .form-row { grid-template-columns: 1fr; }
+      .nav { justify-content: flex-start; }
+      .card { min-height: 150px; }
+    }
+    @media (max-width: 560px) {
+      .container { margin: 10px auto; padding: 0 8px 60px; }
+      .panel { padding: 14px; }
+      .nav button { min-width: 86px; padding: 8px 10px; font-size: .85rem; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <nav class="nav" aria-label="Navegação">
+      <button data-tab="dashboard" class="active">Dashboard</button>
+      <button data-tab="venda">Registrar Venda</button>
+      <button data-tab="reposição">Solicitar Reposição</button>
+      <button data-tab="pedidos">Pedidos</button>
+      <button data-tab="historico">Histórico</button>
+    </nav>
+  </header>
+
+  <main class="container">
+    <div id="msg"></div>
+
+    <section id="dashboard" class="tab-content">
+      <div class="panel">
+        <h2>Visão Geral do Centro Distribuidor</h2>
+        <p id="distResumo" class="mini"></p>
+      </div>
+      <div class="grid-3" id="setoresCards"></div>
+    </section>
+
+    <section id="venda" class="tab-content hidden">
+      <div class="panel">
+        <h2>Registrar Venda</h2>
+        <div class="form-row">
+          <div>
+            <label>Setor</label>
+            <select id="saleSector"></select>
+          </div>
+          <div>
+            <label>Material</label>
+            <select id="saleMaterial">
+              <option value="hinario">Hinário</option>
+              <option value="biblia">Bíblia</option>
+            </select>
+          </div>
+          <div>
+            <label>Quantidade</label>
+            <input id="saleQty" type="number" min="1" value="1" />
+          </div>
+          <div>
+            <label>Forma de pagamento</label>
+            <select id="salePayment">
+              <option>Dinheiro</option>
+              <option>Pix</option>
+            </select>
+          </div>
+          <div>
+            <label>Valor unitário (R$)</label>
+            <input id="salePrice" type="number" min="1" step="0.01" />
+          </div>
+          <div>
+            <label>Data</label>
+            <input id="saleDate" type="date" />
+          </div>
+        </div>
+        <button class="main" id="saleSubmit">Confirmar Venda</button>
+      </div>
+    </section>
+
+    <section id="reposição" class="tab-content hidden">
+      <div class="panel">
+        <h2>Solicitação de Reposição</h2>
+        <div class="form-row">
+          <div>
+            <label>Setor</label>
+            <select id="orderSector"></select>
+          </div>
+          <div>
+            <label>Material</label>
+            <select id="orderMaterial">
+              <option value="hinario">Hinário</option>
+              <option value="biblia">Bíblia</option>
+            </select>
+          </div>
+          <div>
+            <label>Quantidade</label>
+            <input id="orderQty" type="number" min="1" value="1" />
+          </div>
+          <div>
+            <label>Crédito disponível</label>
+            <input id="orderCredit" type="text" disabled />
+          </div>
+          <div>
+            <label>Custo do pedido (R$)</label>
+            <input id="orderCost" type="text" disabled />
+          </div>
+        </div>
+        <button class="main" id="orderSubmit">Enviar Solicitação</button>
+      </div>
+    </section>
+
+    <section id="pedidos" class="tab-content hidden">
+      <div class="panel">
+        <h2>Pedidos Pendentes</h2>
+        <div style="margin-bottom:8px; display:flex; flex-wrap: wrap; gap:8px; align-items:center;">
+          <label style="margin:0; font-weight:600;">Setor</label>
+          <select id="filterOrderSector"><option value="todos">Todos</option></select>
+          <label style="margin:0; font-weight:600;">Status</label>
+          <select id="filterOrderStatus"><option value="todos">Todos</option><option value="Pendente">Pendente</option><option value="Aprovado">Aprovado</option><option value="Recusado">Recusado</option></select>
+        </div>
+        <div id="ordersList"></div>
+      </div>
+    </section>
+
+    <section id="historico" class="tab-content hidden">
+      <div class="panel">
+        <h2>Histórico de Transações</h2>
+        <div style="margin-bottom:8px; display:flex; flex-wrap: wrap; gap:8px; align-items:center;">
+          <label style="margin:0; font-weight:600;">Setor</label>
+          <select id="historySector"><option value="todos">Todos</option></select>
+          <label style="margin:0; font-weight:600;">Tipo</label>
+          <select id="historyType"><option value="todos">Todos</option><option value="venda">Venda</option><option value="reposicao">Reposição</option></select>
+          <label style="margin:0; font-weight:600;">Período</label>
+          <input id="historyFrom" type="date" />
+          <input id="historyTo" type="date" />
+          <button class="small" id="historyFilterBtn">Filtrar</button>
+        </div>
+        <div id="historyTable"></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div>Centro de Distribuição Regional - MVP</div>
+    <button id="resetBtn">Resetar dados</button>
+  </footer>
+
+  <script>
+    const STORAGE_KEY = 'dist_hinarios';
+    const defaultData = {
+      sectors: [
+        { id:'norte', name:'Setor Norte', credit:150.00, stock:{ hinario:10, biblia:5 } },
+        { id:'sul', name:'Setor Sul', credit:80.00, stock:{ hinario:7, biblia:3 } },
+        { id:'leste', name:'Setor Leste', credit:220.00, stock:{ hinario:15, biblia:8 } }
+      ],
+      prices: { hinario:25.00, biblia:45.00 },
+      transactions: [],
+      orders: []
+    };
+
+    function saveData(data) { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }
+    function loadData(){
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) { saveData(defaultData); return JSON.parse(JSON.stringify(defaultData)); }
+      try { const parsed = JSON.parse(raw); if (!parsed || !parsed.sectors) throw new Error(); return parsed; } catch(e){ saveData(defaultData); return JSON.parse(JSON.stringify(defaultData)); }
+    }
+
+    let state = loadData();
+
+    const tabButtons = document.querySelectorAll('.nav button');
+    const messageBox = document.getElementById('msg');
+
+    function showMessage(text, type='success') {
+      messageBox.innerHTML = `<div class="message ${type}">${text}</div>`;
+      setTimeout(() => { if (messageBox.firstElementChild) messageBox.innerHTML = ''; }, 3500);
+    }
+
+    function setActiveTab(tab) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+      document.getElementById(tab).classList.remove('hidden');
+      tabButtons.forEach(btn => btn.classList.toggle('active', btn.dataset.tab===tab));
+      if (tab === 'dashboard') renderDashboard();
+      if (tab === 'pedidos') renderOrders();
+      if (tab === 'historico') renderHistory();
+    }
+
+    tabButtons.forEach(btn => btn.addEventListener('click', () => setActiveTab(btn.dataset.tab)));
+
+    function formatBRL(value){ return Number(value).toLocaleString('pt-BR', { style:'currency', currency:'BRL' }); }
+
+    function getSector(id){ return state.sectors.find(s=>s.id===id); }
+
+    function computeTotalSoldMonth(sectorId){
+      const now = new Date();
+      return state.transactions.filter(t => t.sectorId===sectorId && t.type==='venda').reduce((acc,t)=>{
+        const d = new Date(t.date);
+        if (d.getMonth()===now.getMonth() && d.getFullYear()===now.getFullYear()) return acc + t.amount;
+        return acc;
+      },0);
+    }
+
+    function renderDashboard(){
+      const container = document.getElementById('setoresCards');
+      container.innerHTML = '';
+      let totalCredit=0, totalHinarios=0, totalBiblias=0, totalSales=0;
+      state.sectors.forEach(sector => {
+        totalCredit += sector.credit;
+        totalHinarios += sector.stock.hinario;
+        totalBiblias += sector.stock.biblia;
+        const salesMonth = computeTotalSoldMonth(sector.id);
+        totalSales += salesMonth;
+        const card = document.createElement('div'); card.className='card';
+        card.innerHTML = `<h3>${sector.name}</h3>
+          <p>Saldo de crédito: <strong>${formatBRL(sector.credit)}</strong></p>
+          <p>Total vendido no mês: <strong>${formatBRL(salesMonth)}</strong></p>
+          <p>Estoque: <strong>${sector.stock.hinario} hinários</strong>, <strong>${sector.stock.biblia} bíblias</strong></p>`;
+        container.appendChild(card);
+      });
+      document.getElementById('distResumo').textContent = `Total de crédito: ${formatBRL(totalCredit)} | Estoque total: ${totalHinarios} hinários, ${totalBiblias} bíblias | Vendas mês: ${formatBRL(totalSales)}`;
+      populateSectorSelects();
+    }
+
+    function populateSectorSelects(){
+      const saleSector = document.getElementById('saleSector');
+      const orderSector = document.getElementById('orderSector');
+      const filterSector = document.getElementById('filterOrderSector');
+      const historySector = document.getElementById('historySector');
+      [saleSector, orderSector, filterSector, historySector].forEach(el => {
+        if(!el) return; el.innerHTML = '';
+      });
+
+      const todosOption = document.createElement('option');
+      todosOption.value='todos'; todosOption.textContent='Todos';
+      filterSector.appendChild(todosOption);
+      historySector.appendChild(todosOption.cloneNode(true));
+
+      state.sectors.forEach(s=>{
+        const opt = document.createElement('option'); opt.value=s.id; opt.textContent=s.name;
+        saleSector && saleSector.appendChild(opt.cloneNode(true));
+        orderSector && orderSector.appendChild(opt.cloneNode(true));
+        filterSector && filterSector.appendChild(opt.cloneNode(true));
+        historySector && historySector.appendChild(opt.cloneNode(true));
+      });
+    }
+
+    function initSaleForm(){
+      const saleMaterial = document.getElementById('saleMaterial');
+      const salePrice = document.getElementById('salePrice');
+
+      const setDefaultPrice = () => {
+        const material = saleMaterial.value;
+        salePrice.value = state.prices[material].toFixed(2);
+      };
+      saleMaterial.addEventListener('change', setDefaultPrice);
+      setDefaultPrice();
+
+      const saleDate = document.getElementById('saleDate');
+      saleDate.value = new Date().toISOString().split('T')[0];
+
+      document.getElementById('saleSubmit').addEventListener('click', () => {
+        const sectorId = document.getElementById('saleSector').value;
+        const material = saleMaterial.value;
+        const qty = Number(document.getElementById('saleQty').value);
+        const payment = document.getElementById('salePayment').value;
+        const price = Number(salePrice.value);
+        const date = document.getElementById('saleDate').value;
+
+        if (!sectorId || qty<1 || price<=0 || !date) { showMessage('Por favor, preencha todos os campos corretamente.', 'error'); return; }
+        const sector = getSector(sectorId);
+        if (sector.stock[material] < qty) { showMessage('Estoque insuficiente para esta venda.', 'error'); return; }
+
+        sector.stock[material] -= qty;
+        const total = qty*price;
+        sector.credit += total;
+
+        state.transactions.push({ id: `t_${Date.now()}`, date, sectorId, type: 'venda', payment, material, quantity: qty, amount: total });
+        saveData(state);
+        renderDashboard();
+        renderOrders();
+        renderHistory();
+        showMessage(`Venda registrada: ${qty} ${material === 'hinario' ? 'hinário(s)' : 'bíblia(s)'} por ${formatBRL(total)}.` ,'success');
+      });
+    }
+
+    function initOrderForm(){
+      const orderSector = document.getElementById('orderSector');
+      const orderMaterial = document.getElementById('orderMaterial');
+      const orderQty = document.getElementById('orderQty');
+      const orderCredit = document.getElementById('orderCredit');
+      const orderCost = document.getElementById('orderCost');
+
+      const updateSummary = () => {
+        const sector = getSector(orderSector.value);
+        const qty = Number(orderQty.value);
+        const material = orderMaterial.value;
+        if (!sector || qty < 1) return;
+        const cost = qty * state.prices[material];
+        orderCredit.value = formatBRL(sector.credit);
+        orderCost.value = formatBRL(cost);
+      };
+
+      [orderSector, orderMaterial, orderQty].forEach(el => el.addEventListener('input', updateSummary));
+      updateSummary();
+
+      document.getElementById('orderSubmit').addEventListener('click', () => {
+        const sectorId = orderSector.value;
+        const material = orderMaterial.value;
+        const qty = Number(orderQty.value);
+        const sector = getSector(sectorId);
+        const cost = qty * state.prices[material];
+
+        if (!sector || qty < 1) { showMessage('Preencha todos os campos de solicitação.', 'error'); return; }
+        if (sector.credit < cost) { showMessage('Crédito insuficiente para essa solicitação.', 'error'); return; }
+
+        sector.credit -= cost;
+
+        state.orders.unshift({ id:`o_${Date.now()}`, sectorId, material, quantity:qty, cost, status:'Pendente', requestedAt:new Date().toISOString(), processedAt:null });
+        state.transactions.push({ id: `t_${Date.now()+1}`, date: new Date().toISOString().split('T')[0], sectorId, type:'reposicao', material, quantity:qty, amount:-cost });
+        saveData(state);
+        renderDashboard();
+        renderOrders();
+        renderHistory();
+        showMessage('Solicitação de reposição criada com sucesso.', 'success');
+      });
+    }
+
+    function renderOrders(){
+      const list = document.getElementById('ordersList');
+      const filterSector = document.getElementById('filterOrderSector').value;
+      const filterStatus = document.getElementById('filterOrderStatus').value;
+      const filtered = state.orders.filter(order => {
+        if (filterSector !== 'todos' && order.sectorId !== filterSector) return false;
+        if (filterStatus !== 'todos' && order.status !== filterStatus) return false;
+        return true;
+      });
+
+      if (!filtered.length) {
+        list.innerHTML = '<p>Nenhum pedido encontrado.</p>';
+        return;
+      }
+
+      const rows = filtered.map(o => {
+        const sector = getSector(o.sectorId);
+        const badge = o.status === 'Pendente' ? '<span class="badge badge-pendente">Pendente</span>' : o.status === 'Aprovado' ? '<span class="badge badge-aprovado">Aprovado</span>' : '<span class="badge badge-recusado">Recusado</span>';
+        let actions = '';
+        if (o.status === 'Pendente') {
+          actions = `<button class="small" data-action="aprovar" data-id="${o.id}">Aprovar</button> <button class="small" data-action="recusar" data-id="${o.id}">Recusar</button>`;
+        }
+        return `<tr>
+          <td>${o.id}</td>
+          <td>${sector?.name||o.sectorId}</td>
+          <td>${o.material === 'hinario'? 'Hinário' : 'Bíblia'}</td>
+          <td>${o.quantity}</td>
+          <td>${formatBRL(o.cost)}</td>
+          <td>${badge}</td>
+          <td>${new Date(o.requestedAt).toLocaleString()}</td>
+          <td>${o.processedAt ? new Date(o.processedAt).toLocaleString() : '-'}</td>
+          <td>${actions}</td>
+        </tr>`;
+      }).join('');
+
+      list.innerHTML = `<table><thead><tr><th>ID</th><th>Setor</th><th>Material</th><th>Qtd</th><th>Custo</th><th>Status</th><th>Pedido</th><th>Processado</th><th>Ações</th></tr></thead><tbody>${rows}</tbody></table>`;
+      list.querySelectorAll('button[data-action]').forEach(btn => {
+        btn.addEventListener('click', (e)=>{
+          const action = e.target.dataset.action;
+          const id = e.target.dataset.id;
+          const order = state.orders.find(o=>o.id===id);
+          if (!order) return;
+          const sector = getSector(order.sectorId);
+          if (!sector) return;
+
+          if (action === 'aprovar') {
+            order.status = 'Aprovado';
+            order.processedAt = new Date().toISOString();
+            sector.stock[order.material] += order.quantity;
+            showMessage('Pedido aprovado e estoque atualizado.', 'success');
+          } else if (action === 'recusar') {
+            order.status = 'Recusado';
+            order.processedAt = new Date().toISOString();
+            sector.credit += order.cost;
+            showMessage('Pedido recusado e crédito devolvido.', 'success');
+          }
+
+          saveData(state);
+          renderDashboard();
+          renderOrders();
+          renderHistory();
+        });
+      });
+    }
+
+    document.getElementById('filterOrderSector').addEventListener('change', renderOrders);
+    document.getElementById('filterOrderStatus').addEventListener('change', renderOrders);
+
+    function renderHistory(){
+      const sectorFilter = document.getElementById('historySector').value;
+      const typeFilter = document.getElementById('historyType').value;
+      const fromDate = document.getElementById('historyFrom').value;
+      const toDate = document.getElementById('historyTo').value;
+      const filtered = state.transactions.filter(tx => {
+        if (sectorFilter !== 'todos' && tx.sectorId !== sectorFilter) return false;
+        if (typeFilter !== 'todos' && tx.type !== typeFilter) return false;
+        if (fromDate && new Date(tx.date) < new Date(fromDate)) return false;
+        if (toDate && new Date(tx.date) > new Date(toDate)) return false;
+        return true;
+      });
+
+      if (!filtered.length) {
+        document.getElementById('historyTable').innerHTML = '<p>Nenhuma transação encontrada para o filtro.</p>';
+        return;
+      }
+
+      const rows = filtered.sort((a,b)=>new Date(b.date)-new Date(a.date)).map(tx => {
+        const sector = getSector(tx.sectorId);
+        const normType = tx.type==='venda' ? 'Venda' : 'Reposição';
+        const amount = tx.type==='venda' ? formatBRL(tx.amount) : formatBRL(tx.amount);
+        return `<tr><td>${tx.id}</td><td>${sector?.name||tx.sectorId}</td><td>${normType}</td><td>${tx.material === 'hinario'? 'Hinário': 'Bíblia'}</td><td>${tx.quantity}</td><td>${amount}</td><td>${tx.date}</td></tr>`;
+      }).join('');
+
+      document.getElementById('historyTable').innerHTML = `<table><thead><tr><th>ID</th><th>Setor</th><th>Tipo</th><th>Material</th><th>Qtd</th><th>Valor</th><th>Data</th></tr></thead><tbody>${rows}</tbody></table>`;
+    }
+
+    document.getElementById('historyFilterBtn').addEventListener('click', renderHistory);
+
+    document.getElementById('resetBtn').addEventListener('click', () => {
+      if (!confirm('Resetar todos os dados para o estado inicial?')) return;
+      state = JSON.parse(JSON.stringify(defaultData));
+      saveData(state);
+      renderDashboard();
+      renderOrders();
+      renderHistory();
+      showMessage('Dados reiniciados com sucesso.', 'success');
+    });
+
+    function initialize() {
+      renderDashboard();
+      initSaleForm();
+      initOrderForm();
+      renderOrders();
+      renderHistory();
+    }
+
+    // Ponto de integração futura:
+    // Aqui podemos integrar com SIGA e serviços de pagamento (Recode/Pix) via API, 
+    // chamando endpoints de autorização e conciliação antes de confirmar crédito em operações reais.
+
+    initialize();
+  </script>
+</body>
+</html>
