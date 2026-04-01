@@ -1,7 +1,5 @@
 import { AppData } from './types';
 
-// FASE 2 — Integração SIGA: conectar via API REST para sincronizar pedidos e estoque
-// FASE 2 — Integração Recode/Pix: validar pagamentos Pix em tempo real antes de confirmar crédito
 
 const STORAGE_KEY = 'dist_hinarios';
 

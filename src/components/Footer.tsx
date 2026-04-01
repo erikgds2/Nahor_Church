@@ -32,9 +32,7 @@ export default function Footer() {
       >
         Resetar dados
       </Button>
-      <Text color="gray.400" fontSize="xs" mt={1}>
-        // Integração SIGA e Recode/Pix via API — Fase 2
-      </Text>
+
     </Box>
   );
 }
