@@ -30,7 +30,7 @@ export default function HeroSection() {
           style={{ textAlign: 'center' }}
         >
           <Text color="gold.500" fontSize="xl" fontWeight={700} letterSpacing="wider">
-            ✠ Centro de Distribuição Regional
+            Centro de Distribuição Regional
           </Text>
           <Text color="white" fontSize={{ base: 'xl', md: '2xl' }} fontWeight={800}>
             Congregação Cristã no Brasil
