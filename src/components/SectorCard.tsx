@@ -34,7 +34,19 @@ export default function SectorCard({ fundo, vendasMes, formatBRL }: FundoCardPro
       transition={{ duration: 0.2 }}
     >
       <CardHeader pb={2}>
-        <Heading size="md" color="brand.700">{fundo.coNome}</Heading>
+        <HStack justify="space-between" align="flex-start">
+          <Heading size="md" color="brand.700" flex={1}>{fundo.coNome}</Heading>
+          <Badge
+            colorScheme={fundo.tipo === 'DR' ? 'purple' : 'teal'}
+            fontSize="xs"
+            px={2}
+            py={0.5}
+            borderRadius="md"
+            flexShrink={0}
+          >
+            {fundo.tipo}
+          </Badge>
+        </HStack>
         <Text fontSize="xs" color="gray.400" mt={0.5}>Cód. {fundo.coCodigo}</Text>
       </CardHeader>
       <CardBody pt={0}>

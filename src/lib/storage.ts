@@ -1,29 +1,32 @@
 import { AppData } from './types';
 
-const STORAGE_KEY = 'dist_hinarios_v2';
+const STORAGE_KEY = 'dist_hinarios_v3';
 
 export const defaultData: AppData = {
   fundos: [
     {
-      id: 'fb-central',
-      coNome: 'Casa de Oração Central',
-      coCodigo: 'GRU-001',
-      contaCorrente: 150.00,
-      estoque: { 'HC-102P': 10, 'HC-103P': 5, 'B-1': 5, 'B-3': 3, 'VA-A': 8 },
+      id: 'dr-gopouva',
+      tipo: 'DR',
+      coNome: 'DR Gopouva — Setores 1 e 2',
+      coCodigo: 'DR-GRU',
+      contaCorrente: 0,
+      estoque: {},
     },
     {
-      id: 'fb-norte',
-      coNome: 'Casa de Oração Norte',
-      coCodigo: 'GRU-002',
-      contaCorrente: 80.00,
-      estoque: { 'HC-102P': 7, 'HC-103P': 4, 'B-1': 3, 'VA-A': 5 },
+      id: 'dl-setor4',
+      tipo: 'DL',
+      coNome: 'DL Setor 4 — Bairro dos Pimentas',
+      coCodigo: 'DL-S04',
+      contaCorrente: 0,
+      estoque: {},
     },
     {
-      id: 'fb-sul',
-      coNome: 'Casa de Oração Sul',
-      coCodigo: 'GRU-003',
-      contaCorrente: 220.00,
-      estoque: { 'HC-102P': 15, 'HC-103P': 8, 'B-1': 8, 'B-3': 5, 'VA-A': 12 },
+      id: 'dl-setor3',
+      tipo: 'DL',
+      coNome: 'DL Setor 3 — Jardim Novo Portugal',
+      coCodigo: 'DL-S03',
+      contaCorrente: 0,
+      estoque: {},
     },
   ],
   transactions: [],

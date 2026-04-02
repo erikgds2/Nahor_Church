@@ -27,13 +27,13 @@ export default function DashboardPage() {
       >
         <Container maxW="1200px" px={4} py={6}>
           <Heading size="lg" color="brand.700" mb={6}>
-            Visão Geral — Distribuidora Regional
+            Visão Geral — DR Gopouva · Guarulhos
           </Heading>
 
           {/* Resumo consolidado */}
           <Box bg="brand.700" color="white" borderRadius="xl" p={4} mb={6}>
             <Text fontSize="sm" fontWeight={600} mb={3} opacity={0.8}>
-              Resumo Consolidado — Todos os Fundos Bíblicos
+              Resumo Consolidado — DR + DLs
             </Text>
             <HStack spacing={8} flexWrap="wrap" gap={4}>
               <Stat>
@@ -75,7 +75,7 @@ export default function DashboardPage() {
             <Divider mb={4} />
             <HStack spacing={8} flexWrap="wrap" gap={4}>
               <Stat>
-                <StatLabel color="gray.500" fontSize="xs">Fundos Bíblicos</StatLabel>
+                <StatLabel color="gray.500" fontSize="xs">Distribuidoras</StatLabel>
                 <StatNumber color="brand.700">{data.fundos.length}</StatNumber>
               </Stat>
               <Stat>

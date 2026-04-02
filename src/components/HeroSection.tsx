@@ -18,13 +18,13 @@ export default function HeroSection() {
         style={{ textAlign: 'center' }}
       >
         <Text color="gold.500" fontSize={{ base: 'sm', md: 'md' }} fontWeight={700} letterSpacing="widest" textTransform="uppercase" mb={1}>
-          Centro de Distribuição Regional
+          Distribuidora Regional · Gopouva
         </Text>
         <Text color="white" fontSize={{ base: '2xl', md: '3xl' }} fontWeight={800} lineHeight={1.1}>
           Congregação Cristã no Brasil
         </Text>
         <Text color="whiteAlpha.600" fontSize="sm" mt={1}>
-          Guarulhos · SP
+          Guarulhos · SP — Setores 1, 2, 3 e 4
         </Text>
       </motion.div>
     </Box>

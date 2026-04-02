@@ -24,10 +24,13 @@ export interface Produto {
 // ─── Fundo Bíblico (FB) ─────────────────────────────────────────────────────
 // Pequeno estoque de produtos dentro de uma Casa de Oração.
 
+export type TipoDistribuidor = 'DR' | 'DL';
+
 export interface FundoBiblico {
   id: string;
-  coNome: string;          // nome da Casa de Oração
-  coCodigo: string;        // código da CO no sistema
+  tipo: TipoDistribuidor;  // DR = Distribuidora Regional, DL = Distribuidora Local
+  coNome: string;          // nome da distribuidora
+  coCodigo: string;        // código no sistema
   contaCorrente: number;   // saldo credor disponível para aquisição (R$)
   estoque: Record<string, number>; // { 'HC-102P': 10, 'B-1': 5, ... }
 }
