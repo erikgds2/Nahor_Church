@@ -34,3 +34,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# documentos internos de planejamento
+CEREBRO.md
+DIRETRIZES.md
+pdf/

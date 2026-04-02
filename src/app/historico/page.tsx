@@ -1,40 +1,26 @@
 'use client';
 import { useState } from 'react';
 import {
-  Container,
-  Heading,
-  Box,
-  Table,
-  Thead,
-  Tbody,
-  Tr,
-  Th,
-  Td,
-  Badge,
-  HStack,
-  Select,
-  Input,
-  Text,
-  TableContainer,
-  Stat,
-  StatLabel,
-  StatNumber,
+  Container, Heading, Box, Table, Thead, Tbody, Tr, Th, Td,
+  Badge, HStack, Select, Input, Text, TableContainer,
+  Stat, StatLabel, StatNumber,
 } from '@chakra-ui/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useApp } from '@/context/AppContext';
-import { formatBRL, getMaterialLabel } from '@/lib/storage';
+import { formatBRL } from '@/lib/storage';
+import { getProdutoLabel } from '@/lib/catalog';
 
 export default function HistoricoPage() {
   const { data } = useApp();
 
-  const [filterSector, setFilterSector] = useState('');
+  const [filterFundo, setFilterFundo] = useState('');
   const [filterType, setFilterType] = useState<'venda' | 'reposicao' | ''>('');
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
 
   const filteredTransactions = data.transactions
     .filter(t => {
-      if (filterSector && t.sectorId !== filterSector) return false;
+      if (filterFundo && t.fundoId !== filterFundo) return false;
       if (filterType && t.type !== filterType) return false;
       if (fromDate && new Date(t.date) < new Date(fromDate)) return false;
       if (toDate && new Date(t.date) > new Date(toDate + 'T23:59:59')) return false;
@@ -42,15 +28,10 @@ export default function HistoricoPage() {
     })
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
-  const getSectorName = (id: string) => data.sectors.find(s => s.id === id)?.name ?? id;
+  const getFundoNome = (id: string) => data.fundos.find(f => f.id === id)?.coNome ?? id;
 
-  const totalVendas = filteredTransactions
-    .filter(t => t.type === 'venda')
-    .reduce((acc, t) => acc + t.amount, 0);
-
-  const totalReposicoes = filteredTransactions
-    .filter(t => t.type === 'reposicao')
-    .reduce((acc, t) => acc + t.amount, 0);
+  const totalVendas = filteredTransactions.filter(t => t.type === 'venda').reduce((acc, t) => acc + t.amount, 0);
+  const totalReposicoes = filteredTransactions.filter(t => t.type === 'reposicao').reduce((acc, t) => acc + t.amount, 0);
 
   return (
     <AnimatePresence>
@@ -60,18 +41,10 @@ export default function HistoricoPage() {
         transition={{ duration: 0.35 }}
       >
         <Container maxW="1200px" px={4} py={6}>
-          <Heading size="lg" color="brand.700" mb={6}>
-            Histórico de Transações
-          </Heading>
+          <Heading size="lg" color="brand.700" mb={6}>Histórico de Transações</Heading>
 
           {/* Stats bar */}
-          <Box
-            bg="brand.700"
-            color="white"
-            borderRadius="xl"
-            p={4}
-            mb={4}
-          >
+          <Box bg="brand.700" color="white" borderRadius="xl" p={4} mb={4}>
             <HStack spacing={8} flexWrap="wrap" gap={4}>
               <Stat>
                 <StatLabel opacity={0.75} fontSize="xs">Total de registros</StatLabel>
@@ -88,76 +61,51 @@ export default function HistoricoPage() {
             </HStack>
           </Box>
 
-          {/* Filters */}
-          <Box
-            bg="white"
-            borderRadius="xl"
-            p={4}
-            mb={4}
-            boxShadow="0 4px 12px rgba(26,58,92,0.08)"
-            border="1px solid #e2ecf5"
-          >
+          {/* Filtros */}
+          <Box bg="white" borderRadius="xl" p={4} mb={4} boxShadow="0 4px 12px rgba(26,58,92,0.08)" border="1px solid #e2ecf5">
             <HStack spacing={3} flexWrap="wrap" gap={2}>
               <Select
-                placeholder="Todos os setores"
-                value={filterSector}
-                onChange={e => setFilterSector(e.target.value)}
-                maxW="200px"
-                size="sm"
-                borderColor="brand.200"
+                placeholder="Todos os Fundos"
+                value={filterFundo}
+                onChange={e => setFilterFundo(e.target.value)}
+                maxW="220px" size="sm" borderColor="brand.200"
               >
-                {data.sectors.map(s => (
-                  <option key={s.id} value={s.id}>{s.name}</option>
+                {data.fundos.map(f => (
+                  <option key={f.id} value={f.id}>{f.coNome}</option>
                 ))}
               </Select>
               <Select
                 placeholder="Todos os tipos"
                 value={filterType}
                 onChange={e => setFilterType(e.target.value as 'venda' | 'reposicao' | '')}
-                maxW="180px"
-                size="sm"
-                borderColor="brand.200"
+                maxW="180px" size="sm" borderColor="brand.200"
               >
                 <option value="venda">Venda</option>
                 <option value="reposicao">Reposição</option>
               </Select>
               <Input
-                type="date"
-                placeholder="De"
-                value={fromDate}
+                type="date" placeholder="De" value={fromDate}
                 onChange={e => setFromDate(e.target.value)}
-                maxW="160px"
-                size="sm"
-                borderColor="brand.200"
+                maxW="160px" size="sm" borderColor="brand.200"
               />
               <Input
-                type="date"
-                placeholder="Até"
-                value={toDate}
+                type="date" placeholder="Até" value={toDate}
                 onChange={e => setToDate(e.target.value)}
-                maxW="160px"
-                size="sm"
-                borderColor="brand.200"
+                maxW="160px" size="sm" borderColor="brand.200"
               />
             </HStack>
           </Box>
 
-          {/* Table */}
-          <Box
-            bg="white"
-            borderRadius="xl"
-            boxShadow="0 8px 24px rgba(26,58,92,0.12)"
-            border="1px solid #e2ecf5"
-            overflow="hidden"
-          >
+          {/* Tabela */}
+          <Box bg="white" borderRadius="xl" boxShadow="0 8px 24px rgba(26,58,92,0.12)" border="1px solid #e2ecf5" overflow="hidden">
             <TableContainer>
               <Table variant="simple" size="sm">
                 <Thead bg="brand.50">
                   <Tr>
                     <Th color="brand.700">Data</Th>
-                    <Th color="brand.700">Setor</Th>
+                    <Th color="brand.700">Fundo Bíblico</Th>
                     <Th color="brand.700">Tipo</Th>
-                    <Th color="brand.700">Material</Th>
+                    <Th color="brand.700">Produto</Th>
                     <Th color="brand.700" isNumeric>Qtd.</Th>
                     <Th color="brand.700">Pagamento</Th>
                     <Th color="brand.700" isNumeric>Valor</Th>
@@ -176,32 +124,30 @@ export default function HistoricoPage() {
                         <Td fontSize="xs" color="gray.600">
                           {new Date(t.date).toLocaleDateString('pt-BR')}
                         </Td>
-                        <Td fontWeight={500}>{getSectorName(t.sectorId)}</Td>
+                        <Td fontWeight={500}>{getFundoNome(t.fundoId)}</Td>
                         <Td>
                           <Badge
                             colorScheme={t.type === 'venda' ? 'blue' : 'purple'}
-                            px={2}
-                            py={0.5}
-                            borderRadius="md"
-                            textTransform="capitalize"
+                            px={2} py={0.5} borderRadius="md" textTransform="capitalize"
                           >
                             {t.type === 'venda' ? 'Venda' : 'Reposição'}
                           </Badge>
                         </Td>
-                        <Td>{getMaterialLabel(t.material)}</Td>
+                        <Td>
+                          <Text fontWeight={600} fontSize="xs" color="brand.700">[{t.produtoCodigo}]</Text>
+                          <Text fontSize="xs" color="gray.500" noOfLines={1}>
+                            {getProdutoLabel(t.produtoCodigo)}
+                          </Text>
+                        </Td>
                         <Td isNumeric>{t.quantity}</Td>
                         <Td>
-                          {t.payment ? (
-                            <Text fontSize="xs" color="gray.600">{t.payment}</Text>
-                          ) : (
-                            <Text fontSize="xs" color="gray.400">—</Text>
-                          )}
+                          {t.payment
+                            ? <Text fontSize="xs" color="gray.600">{t.payment}</Text>
+                            : <Text fontSize="xs" color="gray.400">—</Text>
+                          }
                         </Td>
                         <Td isNumeric>
-                          <Text
-                            fontWeight={700}
-                            color={t.type === 'venda' ? 'green.600' : 'red.500'}
-                          >
+                          <Text fontWeight={700} color={t.type === 'venda' ? 'green.600' : 'red.500'}>
                             {t.type === 'venda' ? '+' : '-'}{formatBRL(t.amount)}
                           </Text>
                         </Td>
