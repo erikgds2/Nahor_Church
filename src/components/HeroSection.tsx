@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 export default function HeroSection() {
   return (
     <Box
-      background="linear-gradient(135deg, #0a1828 0%, #1a3a5c 50%, #0d2540 100%)"
+      background="linear-gradient(135deg, #011e2c 0%, #033D60 50%, #022c41 100%)"
       height={{ base: '140px', md: '170px' }}
       display="flex"
       alignItems="center"

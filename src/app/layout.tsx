@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
 import dynamic from 'next/dynamic';
 import './globals.css';
 import { ChakraProviders } from '@/components/ChakraProviders';
@@ -8,8 +7,6 @@ import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 
 const HeroSection = dynamic(() => import('@/components/HeroSection'), { ssr: false });
-
-const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
   title: 'CCB · Centro de Distribuição',
@@ -23,7 +20,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="pt-BR">
-      <body className={inter.className}>
+      <body>
         <ChakraProviders>
           <AppProvider>
             <HeroSection />
