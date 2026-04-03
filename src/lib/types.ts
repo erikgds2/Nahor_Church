@@ -78,6 +78,30 @@ export interface Deposito {
   registradoEm: string;  // ISO datetime
 }
 
+// ─── Fechamento Mensal ──────────────────────────────────────────────────────
+
+export interface ItemContagem {
+  produtoCodigo: string;
+  qtdSistema: number;
+  qtdFisica: number;   // contagem manual no fechamento
+}
+
+export interface FechamentoMensal {
+  id: string;
+  fundoId: string;
+  competencia: string;        // 'YYYY-MM'
+  encerradoEm: string;        // ISO datetime
+  responsavel: string;
+  checkEstoque: boolean;
+  checkCaixa: boolean;
+  checkContaCorrente: boolean;
+  contagem: ItemContagem[];   // estoque físico vs sistema
+  totalVendas: number;
+  totalDepositos: number;
+  saldoCC: number;
+  observacoes: string;
+}
+
 // ─── AppData ────────────────────────────────────────────────────────────────
 
 export interface AppData {
@@ -85,4 +109,5 @@ export interface AppData {
   transactions: Transaction[];
   orders: Order[];
   depositos: Deposito[];
+  fechamentos: FechamentoMensal[];
 }

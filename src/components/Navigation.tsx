@@ -13,6 +13,8 @@ const navItems = [
   { href: '/pedidos', label: 'Pedidos (DT)' },
   { href: '/deposito', label: 'Depósito' },
   { href: '/conta-corrente', label: 'Conta Corrente' },
+  { href: '/fechamento', label: 'Fechamento' },
+  { href: '/relatorios', label: 'Relatórios' },
   { href: '/historico', label: 'Histórico' },
   { href: '/catalogo', label: 'Catálogo' },
 ];

@@ -1,6 +1,6 @@
 import { AppData } from './types';
 
-const STORAGE_KEY = 'dist_hinarios_v4';
+const STORAGE_KEY = 'dist_hinarios_v5';
 
 export const defaultData: AppData = {
   fundos: [
@@ -32,6 +32,7 @@ export const defaultData: AppData = {
   transactions: [],
   orders: [],
   depositos: [],
+  fechamentos: [],
 };
 
 export function loadData(): AppData {
@@ -42,6 +43,7 @@ export function loadData(): AppData {
     const parsed = JSON.parse(raw);
     if (!parsed?.fundos) throw new Error();
     if (!parsed.depositos) parsed.depositos = [];
+    if (!parsed.fechamentos) parsed.fechamentos = [];
     return parsed;
   } catch { saveData(defaultData); return deepClone(defaultData); }
 }
