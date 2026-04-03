@@ -2,12 +2,10 @@
 import { useState, useMemo } from 'react';
 import {
   Container, Heading, Box, FormControl, FormLabel,
-  Select, NumberInput, NumberInputField,
-  NumberInputStepper, NumberIncrementStepper, NumberDecrementStepper,
-  Input, Button, VStack, HStack, Text, Alert, AlertIcon,
+  Select, Input, Button, VStack, HStack, Text, Alert, AlertIcon,
   useToast, Divider, Stat, StatLabel, StatNumber, Badge,
   Table, Thead, Tbody, Tr, Th, Td, TableContainer,
-  IconButton, Tooltip, Kbd,
+  IconButton, Tooltip,
 } from '@chakra-ui/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { DeleteIcon, AddIcon, CheckIcon } from '@chakra-ui/icons';
@@ -217,7 +215,7 @@ export default function VendaPage() {
             transition={{ duration: 0.4, delay: 0.05 }}
           >
             <Box bg="white" borderRadius="xl" p={5} mb={4}
-              boxShadow="0 4px 14px rgba(26,58,92,0.10)" border="1px solid #e2ecf5"
+              boxShadow="0 4px 14px rgba(26,58,92,0.10)" border="1px solid #CDD4DC"
             >
               <Text fontWeight={700} color="brand.700" fontSize="sm" mb={3}>
                 1 — Identificação do Culto
@@ -262,7 +260,7 @@ export default function VendaPage() {
             transition={{ duration: 0.4, delay: 0.12 }}
           >
             <Box bg="white" borderRadius="xl" p={5} mb={4}
-              boxShadow="0 4px 14px rgba(26,58,92,0.10)" border="1px solid #e2ecf5"
+              boxShadow="0 4px 14px rgba(26,58,92,0.10)" border="1px solid #CDD4DC"
             >
               <Text fontWeight={700} color="brand.700" fontSize="sm" mb={3}>
                 2 — Adicionar Produto ao Registro
@@ -319,33 +317,29 @@ export default function VendaPage() {
                 {/* Quantidade */}
                 <FormControl flex={1} minW="110px">
                   <FormLabel color="brand.700" fontWeight={600} fontSize="sm">Qtd.</FormLabel>
-                  <NumberInput
+                  <Input
+                    type="number"
                     min={1}
                     max={estoqueDisponivel || 999}
                     value={qty}
-                    onChange={(_, v) => setQty(v || 1)}
-                  >
-                    <NumberInputField borderColor="brand.200" _focus={{ borderColor: 'brand.500' }} />
-                    <NumberInputStepper>
-                      <NumberIncrementStepper />
-                      <NumberDecrementStepper />
-                    </NumberInputStepper>
-                  </NumberInput>
+                    onChange={e => setQty(Math.max(1, parseInt(e.target.value) || 1))}
+                    borderColor="brand.200"
+                    _focus={{ borderColor: 'brand.500' }}
+                  />
                 </FormControl>
 
                 {/* Preço unit */}
                 <FormControl flex={1} minW="130px">
                   <FormLabel color="brand.700" fontWeight={600} fontSize="sm">Preço unit. (R$)</FormLabel>
-                  <NumberInput
-                    min={0} precision={2} value={preco}
-                    onChange={(_, v) => setPreco(v || 0)}
-                  >
-                    <NumberInputField borderColor="brand.200" _focus={{ borderColor: 'brand.500' }} />
-                    <NumberInputStepper>
-                      <NumberIncrementStepper />
-                      <NumberDecrementStepper />
-                    </NumberInputStepper>
-                  </NumberInput>
+                  <Input
+                    type="number"
+                    min={0}
+                    step={0.01}
+                    value={preco}
+                    onChange={e => setPreco(parseFloat(e.target.value) || 0)}
+                    borderColor="brand.200"
+                    _focus={{ borderColor: 'brand.500' }}
+                  />
                 </FormControl>
 
                 {/* Pagamento */}
@@ -406,7 +400,7 @@ export default function VendaPage() {
                 transition={{ duration: 0.3 }}
               >
                 <Box bg="white" borderRadius="xl" mb={4}
-                  boxShadow="0 4px 14px rgba(26,58,92,0.10)" border="1px solid #e2ecf5"
+                  boxShadow="0 4px 14px rgba(26,58,92,0.10)" border="1px solid #CDD4DC"
                   overflow="hidden"
                 >
                   <Box px={5} pt={4} pb={2}>

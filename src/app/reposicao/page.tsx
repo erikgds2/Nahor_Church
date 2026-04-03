@@ -2,12 +2,9 @@
 import { useState, useMemo } from 'react';
 import {
   Container, Heading, Box, FormControl, FormLabel,
-  Select, NumberInput, NumberInputField,
-  NumberInputStepper, NumberIncrementStepper, NumberDecrementStepper,
-  Button, VStack, HStack, Text, Alert, AlertIcon,
+  Select, Input, Button, VStack, HStack, Text, Alert, AlertIcon,
   useToast, Divider, Stat, StatLabel, StatNumber, Badge,
   Table, Thead, Tbody, Tr, Th, Td, TableContainer, IconButton,
-  Input,
 } from '@chakra-ui/react';
 import { DeleteIcon } from '@chakra-ui/icons';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -237,13 +234,15 @@ export default function ReposicaoPage() {
 
                 <FormControl maxW="120px">
                   <FormLabel color="gray.600" fontSize="sm">Quantidade</FormLabel>
-                  <NumberInput min={1} value={qty} onChange={(_, v) => setQty(v || 1)} size="sm">
-                    <NumberInputField borderColor="brand.200" _focus={{ borderColor: 'brand.500' }} />
-                    <NumberInputStepper>
-                      <NumberIncrementStepper />
-                      <NumberDecrementStepper />
-                    </NumberInputStepper>
-                  </NumberInput>
+                  <Input
+                    type="number"
+                    min={1}
+                    value={qty}
+                    onChange={e => setQty(Math.max(1, parseInt(e.target.value) || 1))}
+                    size="sm"
+                    borderColor="brand.200"
+                    _focus={{ borderColor: 'brand.500' }}
+                  />
                 </FormControl>
 
                 <Button

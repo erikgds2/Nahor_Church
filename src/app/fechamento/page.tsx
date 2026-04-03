@@ -4,8 +4,7 @@ import {
   Container, Heading, Box, Select, Input, Button, VStack, HStack,
   Text, Checkbox, Divider, Table, Thead, Tbody, Tr, Th, Td,
   TableContainer, Badge, Stat, StatLabel, StatNumber, Textarea,
-  Alert, AlertIcon, useToast, NumberInput, NumberInputField,
-  NumberInputStepper, NumberIncrementStepper, NumberDecrementStepper,
+  Alert, AlertIcon, useToast,
 } from '@chakra-ui/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useApp } from '@/context/AppContext';
@@ -277,23 +276,21 @@ export default function FechamentoPage() {
                                   </Td>
                                   <Td isNumeric fontWeight={600}>{qtdSistema}</Td>
                                   <Td isNumeric>
-                                    <NumberInput
+                                    <Input
+                                      type="number"
                                       min={0}
                                       size="xs"
-                                      maxW="80px"
+                                      w="80px"
                                       value={qtdFisica ?? ''}
-                                      onChange={(_, v) => setContagem(prev => ({ ...prev, [codigo]: isNaN(v) ? qtdSistema : v }))}
-                                    >
-                                      <NumberInputField
-                                        placeholder={String(qtdSistema)}
-                                        borderColor={temDivergencia ? 'red.400' : 'brand.200'}
-                                        textAlign="right"
-                                      />
-                                      <NumberInputStepper>
-                                        <NumberIncrementStepper />
-                                        <NumberDecrementStepper />
-                                      </NumberInputStepper>
-                                    </NumberInput>
+                                      placeholder={String(qtdSistema)}
+                                      onChange={e => {
+                                        const v = parseInt(e.target.value);
+                                        setContagem(prev => ({ ...prev, [codigo]: isNaN(v) ? qtdSistema : v }));
+                                      }}
+                                      borderColor={temDivergencia ? 'red.400' : 'brand.200'}
+                                      textAlign="right"
+                                      _focus={{ borderColor: temDivergencia ? 'red.400' : 'brand.500' }}
+                                    />
                                   </Td>
                                   <Td>
                                     {temDivergencia ? (

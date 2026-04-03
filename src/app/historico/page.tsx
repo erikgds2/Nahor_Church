@@ -62,7 +62,7 @@ export default function HistoricoPage() {
           </Box>
 
           {/* Filtros */}
-          <Box bg="white" borderRadius="xl" p={4} mb={4} boxShadow="0 4px 12px rgba(26,58,92,0.08)" border="1px solid #e2ecf5">
+          <Box bg="white" borderRadius="xl" p={4} mb={4} boxShadow="0 4px 12px rgba(26,58,92,0.08)" border="1px solid #CDD4DC">
             <HStack spacing={3} flexWrap="wrap" gap={2}>
               <Select
                 placeholder="Todos os Fundos"
@@ -97,7 +97,7 @@ export default function HistoricoPage() {
           </Box>
 
           {/* Tabela */}
-          <Box bg="white" borderRadius="xl" boxShadow="0 8px 24px rgba(26,58,92,0.12)" border="1px solid #e2ecf5" overflow="hidden">
+          <Box bg="white" borderRadius="xl" boxShadow="0 8px 24px rgba(26,58,92,0.12)" border="1px solid #CDD4DC" overflow="hidden">
             <TableContainer>
               <Table variant="simple" size="sm">
                 <Thead bg="brand.50">
