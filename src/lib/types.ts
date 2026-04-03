@@ -9,7 +9,7 @@ export type Categoria =
   | 'outro';
 
 export type PaymentType = 'Dinheiro' | 'Pix QR Code';
-export type OrderStatus = 'Pendente' | 'Aprovado' | 'Recusado';
+export type OrderStatus = 'Pendente' | 'Aguardando Recebimento' | 'Regular' | 'Recusado';
 export type TransactionType = 'venda' | 'reposicao';
 
 // ─── Produto ────────────────────────────────────────────────────────────────
@@ -53,6 +53,7 @@ export interface Transaction {
 
 export interface Order {
   id: string;
+  dtId: string;              // agrupa itens da mesma DT
   fundoId: string;
   produtoCodigo: string;
   quantity: number;

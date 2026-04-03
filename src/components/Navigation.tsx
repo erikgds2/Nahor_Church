@@ -9,9 +9,10 @@ const MotionButton = motion(Button);
 const navItems = [
   { href: '/', label: 'Dashboard' },
   { href: '/venda', label: 'Registrar Venda' },
-  { href: '/reposicao', label: 'Solicitar Reposição' },
-  { href: '/pedidos', label: 'Pedidos' },
+  { href: '/reposicao', label: 'Solicitar DT' },
+  { href: '/pedidos', label: 'Pedidos (DT)' },
   { href: '/historico', label: 'Histórico' },
+  { href: '/catalogo', label: 'Catálogo' },
 ];
 
 export default function Navigation() {

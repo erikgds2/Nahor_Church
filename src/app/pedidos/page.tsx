@@ -3,7 +3,7 @@ import { useState } from 'react';
 import {
   Container, Heading, Box, Table, Thead, Tbody, Tr, Th, Td,
   Badge, Button, HStack, Select, Text, useToast,
-  TableContainer, Stat, StatLabel, StatNumber,
+  TableContainer, Stat, StatLabel, StatNumber, VStack, Divider,
 } from '@chakra-ui/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useApp } from '@/context/AppContext';
@@ -13,7 +13,8 @@ import { OrderStatus } from '@/lib/types';
 
 const statusColors: Record<OrderStatus, string> = {
   Pendente: 'orange',
-  Aprovado: 'green',
+  'Aguardando Recebimento': 'blue',
+  Regular: 'green',
   Recusado: 'red',
 };
 
@@ -24,63 +25,96 @@ export default function PedidosPage() {
   const [filterFundo, setFilterFundo] = useState('');
   const [filterStatus, setFilterStatus] = useState<OrderStatus | ''>('');
 
-  const filteredOrders = data.orders
-    .filter(o => {
-      if (filterFundo && o.fundoId !== filterFundo) return false;
-      if (filterStatus && o.status !== filterStatus) return false;
+  const getFundoNome = (id: string) => data.fundos.find(f => f.id === id)?.coNome ?? id;
+
+  // Agrupa orders por dtId
+  const dtMap = new Map<string, typeof data.orders>();
+  data.orders.forEach(o => {
+    const dtId = o.dtId ?? o.id;
+    if (!dtMap.has(dtId)) dtMap.set(dtId, []);
+    dtMap.get(dtId)!.push(o);
+  });
+
+  // Lista de DTs para exibição, filtrada
+  const dts = Array.from(dtMap.entries())
+    .map(([dtId, items]) => ({
+      dtId,
+      items,
+      fundoId: items[0].fundoId,
+      status: items[0].status,
+      requestedAt: items[0].requestedAt,
+      totalCost: items.reduce((acc, i) => acc + i.cost, 0),
+    }))
+    .filter(dt => {
+      if (filterFundo && dt.fundoId !== filterFundo) return false;
+      if (filterStatus && dt.status !== filterStatus) return false;
       return true;
     })
     .sort((a, b) => new Date(b.requestedAt).getTime() - new Date(a.requestedAt).getTime());
 
-  const getFundoNome = (id: string) => data.fundos.find(f => f.id === id)?.coNome ?? id;
-
-  const handleApprove = (orderId: string) => {
-    const order = data.orders.find(o => o.id === orderId);
-    if (!order) return;
-
-    const fundos = data.fundos.map(f => ({ ...f, estoque: { ...f.estoque } }));
-    const fundo = fundos.find(f => f.id === order.fundoId);
-    if (fundo) {
-      fundo.estoque[order.produtoCodigo] = (fundo.estoque[order.produtoCodigo] ?? 0) + order.quantity;
-    }
-
+  // DR aprova → Aguardando Recebimento (sem atualizar estoque ainda)
+  const handleApprove = (dtId: string) => {
     const orders = data.orders.map(o =>
-      o.id === orderId
-        ? { ...o, status: 'Aprovado' as OrderStatus, processedAt: new Date().toISOString() }
+      (o.dtId ?? o.id) === dtId && o.status === 'Pendente'
+        ? { ...o, status: 'Aguardando Recebimento' as OrderStatus, processedAt: new Date().toISOString() }
         : o
     );
+    updateData({ ...data, orders });
+    const dt = dtMap.get(dtId)!;
+    toast({
+      title: 'DT aprovada — aguardando confirmação de recebimento',
+      description: `${dt.length} item(s) · ${getFundoNome(dt[0].fundoId)}`,
+      status: 'blue' as any, duration: 4000, isClosable: true,
+    });
+  };
 
+  // DL confirma recebimento → Regular + atualiza estoque
+  const handleConfirmReceipt = (dtId: string) => {
+    const dtItems = dtMap.get(dtId)!;
+    const fundos = data.fundos.map(f => {
+      if (f.id !== dtItems[0].fundoId) return f;
+      const estoque = { ...f.estoque };
+      dtItems.forEach(item => {
+        estoque[item.produtoCodigo] = (estoque[item.produtoCodigo] ?? 0) + item.quantity;
+      });
+      return { ...f, estoque };
+    });
+    const orders = data.orders.map(o =>
+      (o.dtId ?? o.id) === dtId && o.status === 'Aguardando Recebimento'
+        ? { ...o, status: 'Regular' as OrderStatus, processedAt: new Date().toISOString() }
+        : o
+    );
     updateData({ ...data, fundos, orders });
     toast({
-      title: 'Pedido aprovado!',
-      description: `${order.quantity}x [${order.produtoCodigo}] adicionado ao estoque de ${getFundoNome(order.fundoId)}`,
+      title: 'Recebimento confirmado — estoque atualizado!',
+      description: `${dtItems.length} item(s) adicionados ao estoque de ${getFundoNome(dtItems[0].fundoId)}`,
       status: 'success', duration: 4000, isClosable: true,
     });
   };
 
-  const handleReject = (orderId: string) => {
-    const order = data.orders.find(o => o.id === orderId);
-    if (!order) return;
-
-    const fundos = data.fundos.map(f => ({ ...f, estoque: { ...f.estoque } }));
-    const fundo = fundos.find(f => f.id === order.fundoId);
-    if (fundo) fundo.contaCorrente += order.cost;
-
+  // DR recusa → devolve CC
+  const handleReject = (dtId: string) => {
+    const dtItems = dtMap.get(dtId)!;
+    const totalCost = dtItems.reduce((acc, i) => acc + i.cost, 0);
+    const fundos = data.fundos.map(f => {
+      if (f.id !== dtItems[0].fundoId) return f;
+      return { ...f, contaCorrente: f.contaCorrente + totalCost };
+    });
     const orders = data.orders.map(o =>
-      o.id === orderId
+      (o.dtId ?? o.id) === dtId && o.status === 'Pendente'
         ? { ...o, status: 'Recusado' as OrderStatus, processedAt: new Date().toISOString() }
         : o
     );
-
     updateData({ ...data, fundos, orders });
     toast({
-      title: 'Pedido recusado',
-      description: `${formatBRL(order.cost)} devolvido à conta corrente de ${getFundoNome(order.fundoId)}`,
+      title: 'DT recusada',
+      description: `${formatBRL(totalCost)} devolvido à conta corrente de ${getFundoNome(dtItems[0].fundoId)}`,
       status: 'info', duration: 4000, isClosable: true,
     });
   };
 
-  const pendingCount = data.orders.filter(o => o.status === 'Pendente').length;
+  const pendingCount = dts.filter(dt => dt.status === 'Pendente').length;
+  const awaitingCount = dts.filter(dt => dt.status === 'Aguardando Recebimento').length;
 
   return (
     <AnimatePresence>
@@ -91,20 +125,42 @@ export default function PedidosPage() {
       >
         <Container maxW="1200px" px={4} py={6}>
           <HStack justify="space-between" mb={6} flexWrap="wrap" gap={2}>
-            <Heading size="lg" color="brand.700">Pedidos de Reposição (DT)</Heading>
-            {pendingCount > 0 && (
-              <Stat size="sm" textAlign="right">
-                <StatLabel color="orange.500" fontSize="xs">Pendentes</StatLabel>
-                <StatNumber color="orange.500">{pendingCount}</StatNumber>
-              </Stat>
-            )}
+            <Heading size="lg" color="brand.700">Pedidos — Declarações de Trânsito</Heading>
+            <HStack spacing={4}>
+              {pendingCount > 0 && (
+                <Stat size="sm" textAlign="right">
+                  <StatLabel color="orange.500" fontSize="xs">Pendentes</StatLabel>
+                  <StatNumber color="orange.500">{pendingCount}</StatNumber>
+                </Stat>
+              )}
+              {awaitingCount > 0 && (
+                <Stat size="sm" textAlign="right">
+                  <StatLabel color="blue.500" fontSize="xs">Ag. Recebimento</StatLabel>
+                  <StatNumber color="blue.500">{awaitingCount}</StatNumber>
+                </Stat>
+              )}
+            </HStack>
           </HStack>
 
+          {/* Fluxo resumido */}
+          <Box bg="brand.50" borderRadius="lg" p={3} mb={4} border="1px solid #CDD4DC">
+            <HStack spacing={2} flexWrap="wrap" gap={2} fontSize="xs" color="brand.700">
+              <Badge colorScheme="orange">Pendente</Badge>
+              <Text>→ DR aprova →</Text>
+              <Badge colorScheme="blue">Aguardando Recebimento</Badge>
+              <Text>→ DL confirma →</Text>
+              <Badge colorScheme="green">Regular</Badge>
+              <Text color="gray.400" ml={4}>ou</Text>
+              <Badge colorScheme="red">Recusado</Badge>
+              <Text color="gray.400">(CC devolvido)</Text>
+            </HStack>
+          </Box>
+
           {/* Filtros */}
-          <Box bg="white" borderRadius="xl" p={4} mb={4} boxShadow="0 4px 12px rgba(26,58,92,0.08)" border="1px solid #e2ecf5">
+          <Box bg="white" borderRadius="xl" p={4} mb={4} boxShadow="0 4px 12px rgba(3,61,96,0.08)" border="1px solid #CDD4DC">
             <HStack spacing={4} flexWrap="wrap" gap={2}>
               <Select
-                placeholder="Todos os Fundos Bíblicos"
+                placeholder="Todas as distribuidoras"
                 value={filterFundo}
                 onChange={e => setFilterFundo(e.target.value)}
                 maxW="260px" size="sm" borderColor="brand.200"
@@ -117,90 +173,104 @@ export default function PedidosPage() {
                 placeholder="Todos os status"
                 value={filterStatus}
                 onChange={e => setFilterStatus(e.target.value as OrderStatus | '')}
-                maxW="200px" size="sm" borderColor="brand.200"
+                maxW="220px" size="sm" borderColor="brand.200"
               >
                 <option value="Pendente">Pendente</option>
-                <option value="Aprovado">Aprovado</option>
+                <option value="Aguardando Recebimento">Aguardando Recebimento</option>
+                <option value="Regular">Regular</option>
                 <option value="Recusado">Recusado</option>
               </Select>
             </HStack>
           </Box>
 
-          {/* Tabela */}
-          <Box bg="white" borderRadius="xl" boxShadow="0 8px 24px rgba(26,58,92,0.12)" border="1px solid #e2ecf5" overflow="hidden">
-            <TableContainer>
-              <Table variant="simple" size="sm">
-                <Thead bg="brand.50">
-                  <Tr>
-                    <Th color="brand.700">Data</Th>
-                    <Th color="brand.700">Fundo Bíblico</Th>
-                    <Th color="brand.700">Produto</Th>
-                    <Th color="brand.700" isNumeric>Qtd.</Th>
-                    <Th color="brand.700" isNumeric>Custo</Th>
-                    <Th color="brand.700">Status</Th>
-                    <Th color="brand.700">Ações</Th>
-                  </Tr>
-                </Thead>
-                <Tbody>
-                  <AnimatePresence>
-                    {filteredOrders.length === 0 ? (
-                      <Tr>
-                        <Td colSpan={7} textAlign="center" py={8} color="gray.400">
-                          Nenhum pedido encontrado
-                        </Td>
-                      </Tr>
-                    ) : (
-                      filteredOrders.map(order => (
-                        <motion.tr
-                          key={order.id}
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          exit={{ opacity: 0 }}
-                          transition={{ duration: 0.2 }}
-                          style={{ display: 'table-row' }}
+          {/* Lista de DTs */}
+          <VStack spacing={4} align="stretch">
+            {dts.length === 0 ? (
+              <Box bg="white" borderRadius="xl" p={8} textAlign="center" color="gray.400" border="1px solid #CDD4DC">
+                Nenhuma DT encontrada
+              </Box>
+            ) : (
+              dts.map(dt => (
+                <motion.div
+                  key={dt.dtId}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <Box bg="white" borderRadius="xl" boxShadow="0 4px 12px rgba(3,61,96,0.08)" border="1px solid #CDD4DC" overflow="hidden">
+                    {/* Header da DT */}
+                    <HStack
+                      justify="space-between"
+                      px={5} py={3}
+                      bg="brand.50"
+                      borderBottom="1px solid #CDD4DC"
+                      flexWrap="wrap" gap={2}
+                    >
+                      <VStack align="flex-start" spacing={0}>
+                        <Text fontWeight={700} fontSize="sm" color="brand.700">
+                          {dt.dtId}
+                        </Text>
+                        <Text fontSize="xs" color="gray.500">
+                          {getFundoNome(dt.fundoId)} · {new Date(dt.requestedAt).toLocaleDateString('pt-BR')}
+                        </Text>
+                      </VStack>
+                      <HStack spacing={3} flexWrap="wrap" gap={2}>
+                        <Text fontWeight={700} color="brand.700">{formatBRL(dt.totalCost)}</Text>
+                        <Badge
+                          colorScheme={statusColors[dt.status]}
+                          px={2} py={1} borderRadius="md" fontSize="xs"
                         >
-                          <Td fontSize="xs" color="gray.600">
-                            {new Date(order.requestedAt).toLocaleDateString('pt-BR')}
-                          </Td>
-                          <Td fontWeight={500}>{getFundoNome(order.fundoId)}</Td>
-                          <Td>
-                            <Text fontWeight={600} fontSize="xs" color="brand.700">[{order.produtoCodigo}]</Text>
-                            <Text fontSize="xs" color="gray.600" noOfLines={1}>
-                              {getProdutoLabel(order.produtoCodigo)}
-                            </Text>
-                          </Td>
-                          <Td isNumeric>{order.quantity}</Td>
-                          <Td isNumeric fontWeight={600} color="brand.700">{formatBRL(order.cost)}</Td>
-                          <Td>
-                            <Badge colorScheme={statusColors[order.status]} px={2} py={0.5} borderRadius="md">
-                              {order.status}
-                            </Badge>
-                          </Td>
-                          <Td>
-                            {order.status === 'Pendente' && (
-                              <HStack spacing={2}>
-                                <Button size="xs" colorScheme="green" onClick={() => handleApprove(order.id)}>
-                                  Aprovar
-                                </Button>
-                                <Button size="xs" colorScheme="red" variant="outline" onClick={() => handleReject(order.id)}>
-                                  Recusar
-                                </Button>
-                              </HStack>
-                            )}
-                            {order.status !== 'Pendente' && (
-                              <Text fontSize="xs" color="gray.400">
-                                {order.processedAt ? new Date(order.processedAt).toLocaleDateString('pt-BR') : '--'}
-                              </Text>
-                            )}
-                          </Td>
-                        </motion.tr>
-                      ))
-                    )}
-                  </AnimatePresence>
-                </Tbody>
-              </Table>
-            </TableContainer>
-          </Box>
+                          {dt.status}
+                        </Badge>
+
+                        {dt.status === 'Pendente' && (
+                          <HStack spacing={2}>
+                            <Button size="xs" colorScheme="brand" onClick={() => handleApprove(dt.dtId)}>
+                              Aprovar
+                            </Button>
+                            <Button size="xs" colorScheme="red" variant="outline" onClick={() => handleReject(dt.dtId)}>
+                              Recusar
+                            </Button>
+                          </HStack>
+                        )}
+                        {dt.status === 'Aguardando Recebimento' && (
+                          <Button size="xs" colorScheme="green" onClick={() => handleConfirmReceipt(dt.dtId)}>
+                            Confirmar Recebimento
+                          </Button>
+                        )}
+                      </HStack>
+                    </HStack>
+
+                    {/* Itens da DT */}
+                    <TableContainer>
+                      <Table size="sm" variant="simple">
+                        <Thead>
+                          <Tr>
+                            <Th color="gray.500" fontSize="xs">Código</Th>
+                            <Th color="gray.500" fontSize="xs">Produto</Th>
+                            <Th color="gray.500" fontSize="xs" isNumeric>Qtd.</Th>
+                            <Th color="gray.500" fontSize="xs" isNumeric>Custo</Th>
+                          </Tr>
+                        </Thead>
+                        <Tbody>
+                          {dt.items.map(item => (
+                            <Tr key={item.id} _hover={{ bg: 'brand.50' }}>
+                              <Td fontWeight={600} color="brand.700" fontSize="xs">{item.produtoCodigo}</Td>
+                              <Td fontSize="xs" color="gray.600">
+                                <Text noOfLines={1}>{getProdutoLabel(item.produtoCodigo)}</Text>
+                              </Td>
+                              <Td isNumeric>{item.quantity}</Td>
+                              <Td isNumeric fontWeight={600} color="brand.700">{formatBRL(item.cost)}</Td>
+                            </Tr>
+                          ))}
+                        </Tbody>
+                      </Table>
+                    </TableContainer>
+                  </Box>
+                </motion.div>
+              ))
+            )}
+          </VStack>
         </Container>
       </motion.div>
     </AnimatePresence>
