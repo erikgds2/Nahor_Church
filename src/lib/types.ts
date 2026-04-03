@@ -63,10 +63,26 @@ export interface Order {
   processedAt: string | null;
 }
 
+// ─── Depósito bancário ───────────────────────────────────────────────────────
+// Entrada de crédito na conta corrente de uma DL (depósito feito na conta da DR)
+
+export type DepositoForma = 'Pix' | 'Depósito Bancário';
+
+export interface Deposito {
+  id: string;
+  fundoId: string;
+  data: string;           // ISO date string
+  valor: number;
+  forma: DepositoForma;
+  comprovante: string;    // número/descrição do comprovante
+  registradoEm: string;  // ISO datetime
+}
+
 // ─── AppData ────────────────────────────────────────────────────────────────
 
 export interface AppData {
   fundos: FundoBiblico[];
   transactions: Transaction[];
   orders: Order[];
+  depositos: Deposito[];
 }

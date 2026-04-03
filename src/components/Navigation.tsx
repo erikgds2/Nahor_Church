@@ -11,6 +11,8 @@ const navItems = [
   { href: '/venda', label: 'Registrar Venda' },
   { href: '/reposicao', label: 'Solicitar DT' },
   { href: '/pedidos', label: 'Pedidos (DT)' },
+  { href: '/deposito', label: 'Depósito' },
+  { href: '/conta-corrente', label: 'Conta Corrente' },
   { href: '/historico', label: 'Histórico' },
   { href: '/catalogo', label: 'Catálogo' },
 ];
