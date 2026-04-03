@@ -4,9 +4,53 @@
 
 html {
   scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
   margin: 0;
   padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Touch targets mínimos de 44px para mobile */
+button, a, [role="button"] {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Exceção para badges e elementos pequenos que não são interativos */
+.chakra-badge {
+  min-height: unset;
+  min-width: unset;
+}
+
+/* Scroll suave em tabelas no mobile */
+.chakra-table__container {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Inputs maiores no mobile para evitar zoom automático (iOS) */
+@media (max-width: 768px) {
+  input, select, textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* Print — remove sombras e bordas coloridas */
+@media print {
+  * {
+    box-shadow: none !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  body {
+    background: white !important;
+    color: #201E1E !important;
+  }
+
+  nav, footer {
+    display: none !important;
+  }
 }
